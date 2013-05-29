@@ -1,4 +1,4 @@
-package movint.mq.stomp.client;
+package movint.mq.stomp.client.frame.header;
 
 /**
  * Created with IntelliJ IDEA.
@@ -6,10 +6,10 @@ package movint.mq.stomp.client;
  * Date: 28/05/13
  * Time: 23:49
  */
-public class TransactionId {
+public class MessageId {
 	private final String value;
 
-	public TransactionId(String value) {
+	public MessageId(String value) {
 		this.value = value;
 	}
 

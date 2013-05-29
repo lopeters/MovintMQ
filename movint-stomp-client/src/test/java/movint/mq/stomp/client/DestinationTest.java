@@ -15,11 +15,11 @@ import static org.junit.Assert.assertEquals;
 public class DestinationTest {
 	@Test
 	public void createsTopicWithCorrectDestination() throws MalformedURLException {
-		assertEquals("/topic/foo", Destination.topic("foo").name());
+		assertEquals("/topic/foo", Destination.topic("foo").value());
 	}
 
 	@Test
 	public void createsQueueWithCorrectDestination() throws MalformedURLException {
-		assertEquals("/queue/foo", Destination.queue("foo").name());
+		assertEquals("/queue/foo", Destination.queue("foo").value());
 	}
 }

@@ -1,4 +1,4 @@
-package movint.mq.stomp.client;
+package movint.mq.stomp.client.frame.header;
 
 /**
  * Created with IntelliJ IDEA.

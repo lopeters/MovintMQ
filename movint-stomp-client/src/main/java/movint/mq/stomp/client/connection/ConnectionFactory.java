@@ -1,4 +1,4 @@
-package movint.mq.stomp.client;
+package movint.mq.stomp.client.connection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -7,5 +7,5 @@ package movint.mq.stomp.client;
  * Time: 23:32
  */
 public interface ConnectionFactory<T extends Connection> {
-	T connect();
+	T newConnection();
 }

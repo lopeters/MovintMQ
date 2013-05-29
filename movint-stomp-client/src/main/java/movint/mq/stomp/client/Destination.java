@@ -3,6 +3,8 @@ package movint.mq.stomp.client;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,7 +36,7 @@ public class Destination {
 		return new Destination(DestinationType.queue, name);
 	}
 
-	public String name() {
+	public String value() {
 		return "/" + type.name() + "/" + name;
 	}
 
@@ -44,5 +46,9 @@ public class Destination {
 
 	public boolean equals(Object other) {
 		return EqualsBuilder.reflectionEquals(this, other);
+	}
+
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
 	}
 }

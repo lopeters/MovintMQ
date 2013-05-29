@@ -1,5 +1,12 @@
 package movint.mq.stomp.client;
 
+import movint.mq.stomp.client.connection.Connection;
+import movint.mq.stomp.client.connection.ConnectionFactory;
+import movint.mq.stomp.client.frame.builders.ConnectFrameBuilder;
+import movint.mq.stomp.client.frame.builders.DisconnectFrameBuilder;
+import movint.mq.stomp.client.frame.builders.SendFrameBuilder;
+import movint.mq.stomp.client.frame.header.SequentialIdGenerator;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Luke
@@ -7,6 +14,9 @@ package movint.mq.stomp.client;
  * Time: 22:38
  */
 public class StompProducer {
+	private static final String[] ACCEPTED_VERSIONS = new String[]{"1.0", "1.1", "1.2"};
+
+	private final SequentialIdGenerator idGenerator = new SequentialIdGenerator();
 	private final ConnectionFactory connectionFactory;
 
 	public StompProducer(ConnectionFactory connectionFactory) {
@@ -14,8 +24,11 @@ public class StompProducer {
 	}
 
 	public void sendTo(Destination destination, Message message) {
-		Connection connection = connectionFactory.connect();
-		connection.send(destination, message);
-		connection.disconnect();
+		Connection connection = connectionFactory.newConnection();
+		connection.open();
+		connection.send(new ConnectFrameBuilder(connection.host(), ACCEPTED_VERSIONS).build());
+		connection.send(new SendFrameBuilder(destination, message).build());
+		connection.send(new DisconnectFrameBuilder().withReceiptId(idGenerator).build());
+		connection.close();
 	}
 }
