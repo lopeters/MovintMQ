@@ -9,12 +9,9 @@ import movint.mq.stomp.client.frame.Frame;
  * Time: 23:34
  */
 public interface Connection {
-	void open();
+	Connection open();
 
-	void send(Frame frame);
+	Connection send(Frame frame);
 
-	void close();
-
-	// TODO - should this live here? would it be better on ConnectionFactory or as part of some 'Properties'-like object?
-	String host();
+	Connection close();
 }

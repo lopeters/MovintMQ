@@ -32,7 +32,10 @@ public class StompProducerTest {
 	@Before
 	public void setUp() {
 		when(connectionFactory.newConnection()).thenReturn(connection);
-		when(connection.host()).thenReturn(HOST);
+		when(connectionFactory.getHost()).thenReturn(HOST);
+		when(connection.send(any(Frame.class))).thenReturn(connection);
+		when(connection.open()).thenReturn(connection);
+		when(connection.close()).thenReturn(connection);
 	}
 
 	@Test

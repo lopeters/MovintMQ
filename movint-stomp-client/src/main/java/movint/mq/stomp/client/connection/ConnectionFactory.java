@@ -7,5 +7,7 @@ package movint.mq.stomp.client.connection;
  * Time: 23:32
  */
 public interface ConnectionFactory<T extends Connection> {
+	String getHost();
+
 	T newConnection();
 }

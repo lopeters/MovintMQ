@@ -25,10 +25,10 @@ public class StompProducer {
 
 	public void sendTo(Destination destination, Message message) {
 		Connection connection = connectionFactory.newConnection();
-		connection.open();
-		connection.send(new ConnectFrameBuilder(connection.host(), ACCEPTED_VERSIONS).build());
-		connection.send(new SendFrameBuilder(destination, message).build());
-		connection.send(new DisconnectFrameBuilder().withReceiptId(idGenerator).build());
-		connection.close();
+		connection.open()
+				.send(new ConnectFrameBuilder(connectionFactory.getHost(), ACCEPTED_VERSIONS).build())
+				.send(new SendFrameBuilder(destination, message).build())
+				.send(new DisconnectFrameBuilder().withReceiptId(idGenerator).build())
+				.close();
 	}
 }
