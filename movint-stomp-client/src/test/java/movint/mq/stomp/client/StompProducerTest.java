@@ -7,6 +7,7 @@ import movint.mq.stomp.client.frame.Frame;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 
 import static java.util.Collections.singletonMap;
@@ -33,13 +34,10 @@ public class StompProducerTest {
 	public void setUp() {
 		when(connectionFactory.newConnection()).thenReturn(connection);
 		when(connectionFactory.getHost()).thenReturn(HOST);
-		when(connection.send(any(Frame.class))).thenReturn(connection);
-		when(connection.open()).thenReturn(connection);
-		when(connection.close()).thenReturn(connection);
 	}
 
 	@Test
-	public void sendsMessage() {
+	public void sendsMessage() throws IOException {
 		underTest.sendTo(queue(QUEUE_NAME), message);
 
 		verify(connection).open();

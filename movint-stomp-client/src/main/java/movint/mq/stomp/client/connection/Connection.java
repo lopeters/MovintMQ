@@ -2,6 +2,8 @@ package movint.mq.stomp.client.connection;
 
 import movint.mq.stomp.client.frame.Frame;
 
+import java.io.IOException;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Luke
@@ -9,9 +11,9 @@ import movint.mq.stomp.client.frame.Frame;
  * Time: 23:34
  */
 public interface Connection {
-	Connection open();
+	void open() throws IOException;
 
-	Connection send(Frame frame);
+	Frame send(Frame frame) throws IOException;
 
-	Connection close();
+	void close() throws IOException;
 }

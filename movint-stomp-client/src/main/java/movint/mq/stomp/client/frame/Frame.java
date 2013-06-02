@@ -19,6 +19,9 @@ public class Frame {
 	private final String body;
 
 	public Frame(Command command, Map<String, String> headers, String body) {
+		if (command == null) {
+			throw new IllegalArgumentException("Command must not be null");
+		}
 		this.command = command;
 		this.headers = headers;
 		this.body = body;
@@ -29,15 +32,11 @@ public class Frame {
 	}
 
 	public Map<String, String> getHeaders() {
-		return Collections.unmodifiableMap(headers);
+		return headers != null ? Collections.unmodifiableMap(headers) : null;
 	}
 
 	public String getBody() {
 		return body;
-	}
-
-	public byte[] getBytes() {
-		return null;
 	}
 
 	public int hashCode() {

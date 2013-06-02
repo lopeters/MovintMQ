@@ -7,6 +7,8 @@ import movint.mq.stomp.client.frame.builders.DisconnectFrameBuilder;
 import movint.mq.stomp.client.frame.builders.SendFrameBuilder;
 import movint.mq.stomp.client.frame.header.SequentialIdGenerator;
 
+import java.io.IOException;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Luke
@@ -23,12 +25,12 @@ public class StompProducer {
 		this.connectionFactory = connectionFactory;
 	}
 
-	public void sendTo(Destination destination, Message message) {
+	public void sendTo(Destination destination, Message message) throws IOException {
 		Connection connection = connectionFactory.newConnection();
-		connection.open()
-				.send(new ConnectFrameBuilder(connectionFactory.getHost(), ACCEPTED_VERSIONS).build())
-				.send(new SendFrameBuilder(destination, message).build())
-				.send(new DisconnectFrameBuilder().withReceiptId(idGenerator).build())
-				.close();
+		connection.open();
+		connection.send(new ConnectFrameBuilder(connectionFactory.getHost(), ACCEPTED_VERSIONS).build());
+		connection.send(new SendFrameBuilder(destination, message).build());
+		connection.send(new DisconnectFrameBuilder().withReceiptId(idGenerator).build());
+		connection.close();
 	}
 }
