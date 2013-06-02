@@ -22,17 +22,16 @@ import static org.junit.Assert.assertEquals;
  */
 public class SocketConnectionTest {
 	private static final int SERVER_PORT = 2121;
-	private final SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT);
 
 	@Test
 	public void sendAFrame() throws IOException, InterruptedException, ExecutionException, TimeoutException {
 		Frame frame = new Frame(Command.STOMP, null, "Hello Mum!");
 		Future<String> future = startServerSocket();
-		underTest.open();
-		underTest.send(frame);
 
-		assertEquals(new FrameSerializer().convertToWireFormat(frame), future.get(1000, TimeUnit.MILLISECONDS));
-		underTest.close();
+		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
+			underTest.send(frame);
+			assertEquals(new FrameSerializer().convertToWireFormat(frame), future.get(1000, TimeUnit.MILLISECONDS));
+		}
 	}
 
 	public Future<String> startServerSocket() throws IOException {

@@ -40,7 +40,6 @@ public class StompProducerTest {
 	public void sendsMessage() throws IOException {
 		underTest.sendTo(queue(QUEUE_NAME), message);
 
-		verify(connection).open();
 		verify(connection).send(expectedConnectFrame());
 		verify(connection).send(expectedSendFrame());
 		verify(connection).send(expectedDisconnectFrame());

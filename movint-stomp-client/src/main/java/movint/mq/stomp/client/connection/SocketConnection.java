@@ -13,22 +13,11 @@ import java.net.Socket;
  * Date: 28/05/13
  * Time: 23:34
  */
-public class SocketConnection implements Connection {
+public class SocketConnection implements Connection, AutoCloseable {
 	private final FrameSerializer frameSerializer = new FrameSerializer();
-	private final String host;
-	private final int port;
-	private Socket socket;
+	private final Socket socket;
 
-	public SocketConnection(String host, int port) {
-		this.host = host;
-		this.port = port;
-	}
-
-	@Override
-	public synchronized void open() throws IOException {
-		if (socket != null) {
-			throw new IllegalStateException("Cannot open socket that is already connected");
-		}
+	public SocketConnection(String host, int port) throws IOException {
 		socket = new Socket(host, port);
 	}
 
@@ -42,8 +31,6 @@ public class SocketConnection implements Connection {
 
 	@Override
 	public synchronized void close() throws IOException {
-		if (socket != null) {
-			socket.close();
-		}
+		socket.close();
 	}
 }

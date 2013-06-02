@@ -27,7 +27,6 @@ public class StompProducer {
 
 	public void sendTo(Destination destination, Message message) throws IOException {
 		Connection connection = connectionFactory.newConnection();
-		connection.open();
 		connection.send(new ConnectFrameBuilder(connectionFactory.getHost(), ACCEPTED_VERSIONS).build());
 		connection.send(new SendFrameBuilder(destination, message).build());
 		connection.send(new DisconnectFrameBuilder().withReceiptId(idGenerator).build());
