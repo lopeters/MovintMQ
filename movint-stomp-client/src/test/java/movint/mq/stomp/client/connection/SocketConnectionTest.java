@@ -5,6 +5,7 @@ import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameSerializer;
 import org.junit.Test;
 
+import javax.net.SocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,6 +15,7 @@ import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -46,8 +48,13 @@ public class SocketConnectionTest {
 	}
 
 	@Test
-	public void closeTheConnection() {
-		fail("Implement me");
+	public void closeTheConnection() throws IOException {
+		SocketFactory socketFactory = mock(SocketFactory.class);
+		Socket socket = mock(Socket.class);
+		when(socketFactory.createSocket("localhost", SERVER_PORT)).thenReturn(socket);
+
+		new SocketConnection("localhost", SERVER_PORT, socketFactory).close();
+		verify(socket).close();
 	}
 
 	public Future<String> startServerSocket() throws IOException {
