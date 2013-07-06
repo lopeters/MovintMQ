@@ -1,6 +1,6 @@
 package movint.mq.stomp.client.frame.builders;
 
-import movint.mq.stomp.client.frame.Command;
+import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 
 /**
@@ -11,6 +11,6 @@ import movint.mq.stomp.client.frame.Frame;
  */
 public class BeginFrameBuilder {
 	public Frame build() {
-		return new Frame(Command.BEGIN, null, null);
+		return new Frame(ClientCommand.BEGIN, null, null);
 	}
 }

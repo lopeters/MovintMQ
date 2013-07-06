@@ -1,6 +1,6 @@
 package movint.mq.stomp.client.frame.builders;
 
-import movint.mq.stomp.client.frame.Command;
+import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.header.MessageId;
 
@@ -18,6 +18,6 @@ public class AcknowledgedFrameBuilder {
 	}
 
 	public Frame build() {
-		return new Frame(Command.ACK, null, null);
+		return new Frame(ClientCommand.ACK, null, null);
 	}
 }

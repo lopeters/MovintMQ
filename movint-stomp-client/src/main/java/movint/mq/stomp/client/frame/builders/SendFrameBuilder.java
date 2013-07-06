@@ -2,7 +2,7 @@ package movint.mq.stomp.client.frame.builders;
 
 import movint.mq.stomp.client.Destination;
 import movint.mq.stomp.client.Message;
-import movint.mq.stomp.client.frame.Command;
+import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 
 import java.util.LinkedHashMap;
@@ -31,7 +31,7 @@ public class SendFrameBuilder {
 	}
 
 	public Frame build() {
-		return new Frame(Command.SEND, new LinkedHashMap<String, String>() {{
+		return new Frame(ClientCommand.SEND, new LinkedHashMap<String, String>() {{
 			putAll(message.getHeaders());
 			put(DESTINATION_HEADER, destination.value());
 		}}, message.getBody());

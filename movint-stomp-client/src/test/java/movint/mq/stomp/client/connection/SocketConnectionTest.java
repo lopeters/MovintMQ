@@ -1,6 +1,6 @@
 package movint.mq.stomp.client.connection;
 
-import movint.mq.stomp.client.frame.Command;
+import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameSerializer;
 import org.junit.Test;
@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created with IntelliJ IDEA.
@@ -24,14 +25,29 @@ public class SocketConnectionTest {
 	private static final int SERVER_PORT = 2121;
 
 	@Test
-	public void sendAFrame() throws IOException, InterruptedException, ExecutionException, TimeoutException {
-		Frame frame = new Frame(Command.STOMP, null, "Hello Mum!");
+	public void sendAFrameWithNoResponse() throws Exception {
+		Frame frame = new Frame(ClientCommand.STOMP, null, "Hello Mum!");
 		Future<String> future = startServerSocket();
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
 			underTest.send(frame);
 			assertEquals(new FrameSerializer().convertToWireFormat(frame), future.get(1000, TimeUnit.MILLISECONDS));
 		}
+	}
+
+	@Test
+	public void sendAFrameWithResponse() throws Exception {
+		fail("Implement me");
+	}
+
+	@Test
+	public void frameIsEncodedAsUtf8() {
+		fail("Implement me");
+	}
+
+	@Test
+	public void closeTheConnection() {
+		fail("Implement me");
 	}
 
 	public Future<String> startServerSocket() throws IOException {

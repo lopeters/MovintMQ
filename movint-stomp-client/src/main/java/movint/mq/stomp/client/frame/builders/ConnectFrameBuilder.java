@@ -1,6 +1,6 @@
 package movint.mq.stomp.client.frame.builders;
 
-import movint.mq.stomp.client.frame.Command;
+import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 
 import java.util.LinkedHashMap;
@@ -29,7 +29,7 @@ public class ConnectFrameBuilder {
 	}
 
 	public Frame build() {
-		return new Frame(Command.CONNECT, new LinkedHashMap<String, String>() {{
+		return new Frame(ClientCommand.CONNECT, new LinkedHashMap<String, String>() {{
 			put(ACCEPT_VERSION_HEADER, join(acceptedVersions, ","));
 			put(HOST_HEADER, host);
 		}}, null);

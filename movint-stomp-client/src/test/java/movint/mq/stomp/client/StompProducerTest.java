@@ -2,7 +2,7 @@ package movint.mq.stomp.client;
 
 import movint.mq.stomp.client.connection.Connection;
 import movint.mq.stomp.client.connection.ConnectionFactory;
-import movint.mq.stomp.client.frame.Command;
+import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,21 +47,21 @@ public class StompProducerTest {
 	}
 
 	private Frame expectedConnectFrame() {
-		return new Frame(Command.CONNECT, new LinkedHashMap<String, String>() {{
+		return new Frame(ClientCommand.CONNECT, new LinkedHashMap<String, String>() {{
 			put("accept-version", "1.0,1.1,1.2");
 			put("host", "localhost");
 		}}, null);
 	}
 
 	private Frame expectedSendFrame() {
-		return new Frame(Command.SEND, new LinkedHashMap<String, String>() {{
+		return new Frame(ClientCommand.SEND, new LinkedHashMap<String, String>() {{
 			put("destination", "/queue/" + QUEUE_NAME);
 			put("name", "value");
 		}}, MESSAGE_BODY);
 	}
 
 	private Frame expectedDisconnectFrame() {
-		return new Frame(Command.DISCONNECT, new LinkedHashMap<String, String>() {{
+		return new Frame(ClientCommand.DISCONNECT, new LinkedHashMap<String, String>() {{
 			put("receipt", "1");
 		}}, null);
 	}

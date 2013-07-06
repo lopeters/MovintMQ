@@ -3,9 +3,9 @@ package movint.mq.stomp.client.frame;
 /**
  * Created with IntelliJ IDEA.
  * User: Luke
- * Date: 06/07/13
- * Time: 02:43
+ * Date: 29/05/13
+ * Time: 23:01
  */
-public interface Command {
-	String name();
+public enum ServerCommand implements Command {
+	ERROR
 }
