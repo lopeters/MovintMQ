@@ -27,6 +27,6 @@ public class FrameSerializer {
 	}
 
 	private String escape(String headerString) {
-		return headerString.replaceAll("\\\\", "\\\\\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n").replace("\r", "\\r");
+		return headerString.replace("\\", "\\\\").replace(":", "\\c").replace("\n", "\\n").replace("\r", "\\r");
 	}
 }

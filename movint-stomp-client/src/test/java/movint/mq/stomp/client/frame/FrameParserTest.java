@@ -17,6 +17,7 @@ public class FrameParserTest {
 
 	public static final String STOMP_FRAME_NO_BODY = "STOMP\naccept-version:1.2\nhost:localhost\n\n\0";
 	public static final String ERROR_FRAME_NO_HEADERS = "ERROR\n\nThe message:\n\n'hello mum!' was malformed\0";
+	public static final String ERROR_FRAME_WITH_NULL_IN_BODY = "ERROR\ncontent-length:42\n\nThe message:\n\n'hello mum!\0' was malformed\0";
 	public static final String SEND_FRAME_WITH_HEADERS_AND_BODY = "SEND\ndestination:/queue/foo\n\nhello mum\0";
 
 	@Test
@@ -41,8 +42,33 @@ public class FrameParserTest {
 	}
 
 	@Test
-	public void parseFrameWithEscapedCharactersInHeaders() {
+	public void parseFrameWithContentLengthHeaderAndNullsInBody() {
+		Frame actualFrame = new FrameParser().parse(ERROR_FRAME_WITH_NULL_IN_BODY);
+		assertEquals(new Frame(Command.ERROR, Collections.singletonMap("content-length", "42"), "The message:\n\n'hello mum!\0' was malformed"), actualFrame);
+	}
 
+	@Test
+	public void parseFrameWithEscapedColonInHeaders() {
+		Frame actualFrame = new FrameParser().parse("SEND\ndestination:/queue/foo\\cbar\n\nhello mum\0");
+		assertEquals(new Frame(Command.SEND, Collections.singletonMap("destination", "/queue/foo:bar"), "hello mum"), actualFrame);
+	}
+
+	@Test
+	public void parseFrameWithEscapedLineFeedInHeaders() {
+		Frame actualFrame = new FrameParser().parse("SEND\ndestination:/queue/foo\\rbar\n\nhello mum\0");
+		assertEquals(new Frame(Command.SEND, Collections.singletonMap("destination", "/queue/foo\nbar"), "hello mum"), actualFrame);
+	}
+
+	@Test
+	public void parseFrameWithEscapedCarriageReturnInHeaders() {
+		Frame actualFrame = new FrameParser().parse("SEND\ndestination:/queue/foo\\nbar\n\nhello mum\0");
+		assertEquals(new Frame(Command.SEND, Collections.singletonMap("destination", "/queue/foo\nbar"), "hello mum"), actualFrame);
+	}
+
+	@Test
+	public void parseFrameWithEscapedSlashInHeaders() {
+		Frame actualFrame = new FrameParser().parse("SEND\ndestination:/queue/foo\\\\bar\n\nhello mum\0");
+		assertEquals(new Frame(Command.SEND, Collections.singletonMap("destination", "/queue/foo\\bar"), "hello mum"), actualFrame);
 	}
 
 	@Test(expected = IllegalArgumentException.class)

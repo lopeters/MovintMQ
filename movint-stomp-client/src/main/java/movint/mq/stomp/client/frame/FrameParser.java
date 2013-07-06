@@ -23,10 +23,10 @@ public class FrameParser {
 			throw new IllegalArgumentException("Invalid frame - not terminated by a null character: " + frameSections[1]);
 		}
 		String[] commandAndHeaders = frameSections[0].split("\n");
-		String body = frameSections[1];
 		Command command = Command.valueOf(commandAndHeaders[0]);
 		Map<String, String> headers = parseHeaders(commandAndHeaders);
-		return new Frame(command, headers, body.substring(0, body.lastIndexOf("\0")));
+		int bodyLength = headers.containsKey("content-length") ? Integer.valueOf(headers.get("content-length")) - 1 : frameSections[1].lastIndexOf("\0");
+		return new Frame(command, headers, frameSections[1].substring(0, bodyLength));
 	}
 
 	private Map<String, String> parseHeaders(String[] commandAndHeaders) {
@@ -35,8 +35,12 @@ public class FrameParser {
 		headerList.remove(0);
 		for (String header : headerList) {
 			String[] keyValuePair = header.split(":", 2);
-			headers.put(keyValuePair[0], keyValuePair[1]);
+			headers.put(unescape(keyValuePair[0]), unescape(keyValuePair[1]));
 		}
 		return headers;
+	}
+
+	private String unescape(String value) {
+		return value.replace("\\c", ":").replace("\\n", "\n").replace("\\r", "\n").replace("\\\\", "\\");
 	}
 }
