@@ -13,8 +13,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -32,8 +31,9 @@ public class SocketConnectionTest {
 		Future<String> future = startServerSocket();
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
-			underTest.send(frame);
+			Frame response = underTest.send(frame);
 			assertEquals(new FrameSerializer().convertToWireFormat(frame), future.get(1000, TimeUnit.MILLISECONDS));
+			assertNull(response);
 		}
 	}
 
@@ -70,11 +70,8 @@ public class SocketConnectionTest {
 									StringBuilder sb = new StringBuilder();
 									boolean firstLine = true;
 									while ((inputLine = in.readLine()) != null) {
-										if (firstLine) {
-											firstLine = false;
-										} else {
-											sb.append("\n");
-										}
+										if (firstLine) firstLine = false;
+										else sb.append("\n");
 										sb.append(inputLine);
 									}
 									return sb.toString();

@@ -33,19 +33,24 @@ public class SocketConnection implements Connection, Closeable {
 		try (PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
 			writer.print(frameSerializer.convertToWireFormat(frame));
 		}
-		StringBuilder response = readResponse();
-		return response.length() > 0 ? frameParser.parse(response.toString()) : null;
+		String response = readResponse();
+		return response.length() > 0 ? frameParser.parse(response) : null;
 	}
 
-	private StringBuilder readResponse() throws IOException {
+	private String readResponse() throws IOException {
 		StringBuilder response = new StringBuilder();
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-			String input;
-			while ((input = reader.readLine()) != null) {
-				response.append(input);
+		if (!socket.isClosed()) {
+			try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+				String inputLine;
+				boolean firstLine = true;
+				while ((inputLine = in.readLine()) != null) {
+					if (firstLine) firstLine = false;
+					else response.append("\n");
+					response.append(inputLine);
+				}
 			}
 		}
-		return response;
+		return response.toString();
 	}
 
 	@Override
