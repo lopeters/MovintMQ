@@ -8,4 +8,18 @@ package movint.mq.stomp.client.frame;
  */
 public interface CommandFactory {
 	Command createCommand(String commandName);
+
+	public class ClientCommandFactory implements CommandFactory {
+		@Override
+		public Command createCommand(String commandName) {
+			return ClientCommand.valueOf(commandName);
+		}
+	}
+
+	public class ServerCommandFactory implements CommandFactory {
+		@Override
+		public Command createCommand(String commandName) {
+			return ServerCommand.valueOf(commandName);
+		}
+	}
 }

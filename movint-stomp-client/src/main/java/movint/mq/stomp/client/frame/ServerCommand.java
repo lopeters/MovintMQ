@@ -7,5 +7,5 @@ package movint.mq.stomp.client.frame;
  * Time: 23:01
  */
 public enum ServerCommand implements Command {
-	ERROR
+	MESSAGE, ERROR, RECEIPT
 }
