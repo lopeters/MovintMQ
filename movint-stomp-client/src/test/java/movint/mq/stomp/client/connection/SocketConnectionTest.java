@@ -1,6 +1,5 @@
 package movint.mq.stomp.client.connection;
 
-import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameSerializer;
 import org.junit.Test;
@@ -9,10 +8,18 @@ import javax.net.SocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import static java.util.Collections.singletonMap;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static movint.mq.stomp.client.frame.ClientCommand.STOMP;
+import static movint.mq.stomp.client.frame.ServerCommand.RECEIPT;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -27,19 +34,27 @@ public class SocketConnectionTest {
 
 	@Test
 	public void sendAFrameWithNoResponse() throws Exception {
-		Frame frame = new Frame(ClientCommand.STOMP, null, "Hello Mum!");
-		Future<String> future = startServerSocket();
+		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
+		Future<String> messageFuture = startServerWithNoResponse();
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
-			Frame response = underTest.send(frame);
-			assertEquals(new FrameSerializer().convertToWireFormat(frame), future.get(1000, TimeUnit.MILLISECONDS));
+			Frame response = underTest.send(outgoingMessage);
+			assertEquals(new FrameSerializer().convertToWireFormat(outgoingMessage), messageFuture.get(1000, MILLISECONDS));
 			assertNull(response);
 		}
 	}
 
 	@Test
 	public void sendAFrameWithResponse() throws Exception {
-		fail("Implement me");
+		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
+		Frame expectedResponse = new Frame(RECEIPT, singletonMap("header", "value"), "Hello son");
+		Future<String> messageFuture = startServerThatWillRespondWith(expectedResponse);
+
+		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
+			Frame actualResponse = underTest.send(outgoingMessage);
+			assertEquals(new FrameSerializer().convertToWireFormat(outgoingMessage), messageFuture.get(1000, MILLISECONDS));
+			assertEquals(expectedResponse, actualResponse);
+		}
 	}
 
 	@Test
@@ -52,12 +67,17 @@ public class SocketConnectionTest {
 		SocketFactory socketFactory = mock(SocketFactory.class);
 		Socket socket = mock(Socket.class);
 		when(socketFactory.createSocket("localhost", SERVER_PORT)).thenReturn(socket);
+		when(socket.isConnected()).thenReturn(true);
 
 		new SocketConnection("localhost", SERVER_PORT, socketFactory).close();
 		verify(socket).close();
 	}
 
-	public Future<String> startServerSocket() throws IOException {
+	public Future<String> startServerWithNoResponse() throws IOException {
+		return startServerThatWillRespondWith(null);
+	}
+
+	public Future<String> startServerThatWillRespondWith(final Frame response) throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		return executor.submit(
 				new Callable<String>() {
@@ -65,17 +85,22 @@ public class SocketConnectionTest {
 					public String call() {
 						try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
 							try (Socket clientSocket = serverSocket.accept()) {
-								try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+								StringBuilder sb = new StringBuilder();
+								try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+								     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
 									String inputLine;
-									StringBuilder sb = new StringBuilder();
 									boolean firstLine = true;
 									while ((inputLine = in.readLine()) != null) {
 										if (firstLine) firstLine = false;
 										else sb.append("\n");
 										sb.append(inputLine);
+//										if (inputLine.endsWith("\0")) break;
 									}
-									return sb.toString();
+									if (response != null) {
+										writer.print(new FrameSerializer().convertToWireFormat(response));
+									}
 								}
+								return sb.toString();
 							}
 						} catch (IOException e) {
 							throw new RuntimeException(e);

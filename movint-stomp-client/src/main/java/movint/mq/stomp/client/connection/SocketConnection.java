@@ -4,6 +4,7 @@ import movint.mq.stomp.client.frame.CommandFactory;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameParser;
 import movint.mq.stomp.client.frame.FrameSerializer;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.net.SocketFactory;
 import java.io.*;
@@ -17,7 +18,7 @@ import java.net.Socket;
  */
 public class SocketConnection implements Connection, Closeable {
 	private final FrameSerializer frameSerializer = new FrameSerializer();
-	private final FrameParser frameParser = new FrameParser(new CommandFactory.ClientCommandFactory());
+	private final FrameParser frameParser = new FrameParser(new CommandFactory.ServerCommandFactory());
 	private final Socket socket;
 
 	public SocketConnection(String host, int port) throws IOException {
@@ -30,24 +31,27 @@ public class SocketConnection implements Connection, Closeable {
 
 	@Override
 	public synchronized Frame send(Frame frame) throws IOException {
-		try (PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+		String response;
+		try (
+				PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 			writer.print(frameSerializer.convertToWireFormat(frame));
+			writer.flush();
+			socket.shutdownOutput();
+			response = readResponse(in);
 		}
-		String response = readResponse();
-		return response.length() > 0 ? frameParser.parse(response) : null;
+		return StringUtils.isNotBlank(response) ? frameParser.parse(response) : null;
 	}
 
-	private String readResponse() throws IOException {
+	private String readResponse(BufferedReader in) throws IOException {
 		StringBuilder response = new StringBuilder();
 		if (!socket.isClosed()) {
-			try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-				String inputLine;
-				boolean firstLine = true;
-				while ((inputLine = in.readLine()) != null) {
-					if (firstLine) firstLine = false;
-					else response.append("\n");
-					response.append(inputLine);
-				}
+			String inputLine;
+			boolean firstLine = true;
+			while ((inputLine = in.readLine()) != null) {
+				if (firstLine) firstLine = false;
+				else response.append("\n");
+				response.append(inputLine);
 			}
 		}
 		return response.toString();
