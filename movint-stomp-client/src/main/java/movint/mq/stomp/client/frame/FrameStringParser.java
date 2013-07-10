@@ -10,10 +10,10 @@ import java.util.*;
  * Date: 02/06/13
  * Time: 01:19
  */
-public class FrameParser {
+public class FrameStringParser {
 	private final CommandFactory commandFactory;
 
-	public FrameParser(CommandFactory commandFactory) {
+	public FrameStringParser(CommandFactory commandFactory) {
 		this.commandFactory = commandFactory;
 	}
 

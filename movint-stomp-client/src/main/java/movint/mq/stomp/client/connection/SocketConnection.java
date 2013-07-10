@@ -2,8 +2,8 @@ package movint.mq.stomp.client.connection;
 
 import movint.mq.stomp.client.frame.CommandFactory;
 import movint.mq.stomp.client.frame.Frame;
-import movint.mq.stomp.client.frame.FrameParser;
 import movint.mq.stomp.client.frame.FrameSerializer;
+import movint.mq.stomp.client.frame.FrameStringParser;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.net.SocketFactory;
@@ -18,7 +18,7 @@ import java.net.Socket;
  */
 public class SocketConnection implements Connection, Closeable {
 	private final FrameSerializer frameSerializer = new FrameSerializer();
-	private final FrameParser frameParser = new FrameParser(new CommandFactory.ServerCommandFactory());
+	private final FrameStringParser frameStringParser = new FrameStringParser(new CommandFactory.ServerCommandFactory());
 	private final Socket socket;
 
 	public SocketConnection(String host, int port) throws IOException {
@@ -40,7 +40,7 @@ public class SocketConnection implements Connection, Closeable {
 			socket.shutdownOutput();
 			response = readResponse(in);
 		}
-		return StringUtils.isNotBlank(response) ? frameParser.parse(response) : null;
+		return StringUtils.isNotBlank(response) ? frameStringParser.parse(response) : null;
 	}
 
 	private String readResponse(BufferedReader in) throws IOException {
