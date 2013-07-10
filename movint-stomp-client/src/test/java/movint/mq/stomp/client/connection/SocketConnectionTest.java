@@ -1,7 +1,9 @@
 package movint.mq.stomp.client.connection;
 
+import movint.mq.stomp.client.frame.CommandFactory;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameSerializer;
+import movint.mq.stomp.client.frame.StreamingFrameParser;
 import org.junit.Test;
 
 import javax.net.SocketFactory;
@@ -35,11 +37,11 @@ public class SocketConnectionTest {
 	@Test
 	public void sendAFrameWithNoResponse() throws Exception {
 		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
-		Future<String> messageFuture = startServerWithNoResponse();
+		Future<Frame> messageFuture = startServerWithNoResponse();
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
 			Frame response = underTest.send(outgoingMessage);
-			assertEquals(new FrameSerializer().convertToWireFormat(outgoingMessage), messageFuture.get(1000, MILLISECONDS));
+			assertEquals(outgoingMessage, messageFuture.get(1000, MILLISECONDS));
 			assertNull(response);
 		}
 	}
@@ -48,11 +50,11 @@ public class SocketConnectionTest {
 	public void sendAFrameWithResponse() throws Exception {
 		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
 		Frame expectedResponse = new Frame(RECEIPT, singletonMap("header", "value"), "Hello son");
-		Future<String> messageFuture = startServerThatWillRespondWith(expectedResponse);
+		Future<Frame> messageFuture = startServerThatWillRespondWith(expectedResponse);
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
 			Frame actualResponse = underTest.send(outgoingMessage);
-			assertEquals(new FrameSerializer().convertToWireFormat(outgoingMessage), messageFuture.get(1000, MILLISECONDS));
+			assertEquals(outgoingMessage, messageFuture.get(1000, MILLISECONDS));
 			assertEquals(expectedResponse, actualResponse);
 		}
 	}
@@ -73,34 +75,27 @@ public class SocketConnectionTest {
 		verify(socket).close();
 	}
 
-	public Future<String> startServerWithNoResponse() throws IOException {
+	public Future<Frame> startServerWithNoResponse() throws IOException {
 		return startServerThatWillRespondWith(null);
 	}
 
-	public Future<String> startServerThatWillRespondWith(final Frame response) throws IOException {
+	public Future<Frame> startServerThatWillRespondWith(final Frame response) throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		return executor.submit(
-				new Callable<String>() {
+				new Callable<Frame>() {
 					@Override
-					public String call() {
+					public Frame call() {
 						try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
 							try (Socket clientSocket = serverSocket.accept()) {
-								StringBuilder sb = new StringBuilder();
-								try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+								try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 								     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
-									String inputLine;
-									boolean firstLine = true;
-									while ((inputLine = in.readLine()) != null) {
-										if (firstLine) firstLine = false;
-										else sb.append("\n");
-										sb.append(inputLine);
-//										if (inputLine.endsWith("\0")) break;
-									}
+									Frame received = new StreamingFrameParser(new CommandFactory.ClientCommandFactory()).parse(reader);
 									if (response != null) {
 										writer.print(new FrameSerializer().convertToWireFormat(response));
+										writer.flush();
 									}
+									return received;
 								}
-								return sb.toString();
 							}
 						} catch (IOException e) {
 							throw new RuntimeException(e);

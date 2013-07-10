@@ -4,8 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,56 +13,54 @@ import java.util.Map;
  * Date: 02/06/13
  * Time: 01:19
  */
-public class FrameStreamParser {
+public class StreamingFrameParser implements FrameParser<BufferedReader> {
 	private final CommandFactory commandFactory;
 
-	public FrameStreamParser(CommandFactory commandFactory) {
+	public StreamingFrameParser(CommandFactory commandFactory) {
 		this.commandFactory = commandFactory;
 	}
 
-	public Frame parse(InputStream stream) throws IOException {
-		if (stream == null) {
+	@Override
+	public Frame parse(BufferedReader reader) throws IOException {
+		if (reader == null)
 			throw new IllegalArgumentException("Cannot parse null input stream");
-		}
 		Map<String, String> headers = new LinkedHashMap<>();
 		Command command = null;
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(stream))) {
-			String currentInput;
-			boolean readingCommandLine = true;
-			while ((currentInput = in.readLine()) != null && currentInput.length() > 0) {
-				if (readingCommandLine) {
-					readingCommandLine = false;
-					command = commandFactory.createCommand(currentInput);
-				} else {
-					String[] keyValuePair = currentInput.split(":");
-					if (keyValuePair.length != 2)
-						throw new FrameFormatException("Invalid header: '" + StringUtils.join(keyValuePair, ":") + "'");
-					headers.put(unescape(keyValuePair[0]), unescape(keyValuePair[1]));
-				}
+		String currentInput;
+		boolean readingCommandLine = true;
+		while ((currentInput = reader.readLine()) != null && currentInput.length() > 0) {
+			if (readingCommandLine) {
+				readingCommandLine = false;
+				command = commandFactory.createCommand(currentInput);
+			} else {
+				String[] keyValuePair = currentInput.split(":");
+				if (keyValuePair.length != 2)
+					throw new FrameFormatException("Invalid header: '" + StringUtils.join(keyValuePair, ":") + "'");
+				headers.put(unescape(keyValuePair[0]), unescape(keyValuePair[1]));
 			}
-			if (command == null)
-				return null;
-			else if (currentInput == null)
-				throw new FrameFormatException("Stream terminated before end of frame");
-			String contentLengthHeader = headers.get("content-length");
-			return new Frame(command, headers, readBody(in, contentLengthHeader));
 		}
+		if (command == null)
+			return null;
+		else if (currentInput == null)
+			throw new FrameFormatException("Stream terminated before end of frame");
+		String contentLengthHeader = headers.get("content-length");
+		return new Frame(command, headers, readBody(reader, contentLengthHeader));
 	}
 
-	private String readBody(BufferedReader in, String contentLengthHeader) throws IOException {
+	private String readBody(BufferedReader reader, String contentLengthHeader) throws IOException {
 		if (contentLengthHeader != null) {
-			return readSpecifiedContentLength(in, Integer.valueOf(contentLengthHeader));
+			return readSpecifiedContentLength(reader, Integer.valueOf(contentLengthHeader));
 		} else {
-			return readUpToNullCharacter(in);
+			return readUpToNullCharacter(reader);
 		}
 	}
 
-	private String readUpToNullCharacter(BufferedReader in) throws IOException {
+	private String readUpToNullCharacter(BufferedReader reader) throws IOException {
 		String currentInput;
 		StringBuilder body = new StringBuilder();
 		boolean firstLine = true;
 		int nullIndex = -1;
-		while (nullIndex < 0 && (currentInput = in.readLine()) != null) {
+		while (nullIndex < 0 && (currentInput = reader.readLine()) != null) {
 			if (firstLine) firstLine = false;
 			else body.append("\n");
 			nullIndex = currentInput.indexOf("\0");

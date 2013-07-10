@@ -23,7 +23,7 @@ public class Frame {
 			throw new IllegalArgumentException("Command must not be null");
 		}
 		this.command = command;
-		this.headers = headers;
+		this.headers = headers != null ? headers : Collections.<String, String>emptyMap();
 		this.body = body;
 	}
 
@@ -32,7 +32,7 @@ public class Frame {
 	}
 
 	public Map<String, String> getHeaders() {
-		return headers != null ? Collections.unmodifiableMap(headers) : null;
+		return Collections.unmodifiableMap(headers);
 	}
 
 	public String getBody() {

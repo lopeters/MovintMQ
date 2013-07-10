@@ -16,13 +16,10 @@ public class FrameSerializer {
 		StringBuilder payload = new StringBuilder();
 		payload.append(frame.getCommand().name()).append("\n");
 		Map<String, String> headers = frame.getHeaders();
-		if (headers != null) {
-			for (String key : headers.keySet()) {
-				payload.append(escape(key)).append(":").append(escape(headers.get(key))).append("\n");
-			}
+		for (String key : headers.keySet()) {
+			payload.append(escape(key)).append(":").append(escape(headers.get(key))).append("\n");
 		}
-		payload.append("\n");
-		payload.append(frame.getBody()).append("\0");
+		payload.append("\n").append(frame.getBody()).append("\0");
 		return payload.toString();
 	}
 

@@ -13,14 +13,14 @@ import static org.junit.Assert.assertEquals;
  * Date: 02/06/13
  * Time: 01:23
  */
-public class FrameStringParserTest {
+public class StringFrameParserTest {
 
 	public static final String STOMP_FRAME_NO_BODY = "STOMP\naccept-version:1.2\nhost:localhost\n\n\0";
 	public static final String ERROR_FRAME_NO_HEADERS = "ERROR\n\nThe message:\n\n'hello mum!' was malformed\0";
 	public static final String ERROR_FRAME_WITH_NULL_IN_BODY = "ERROR\ncontent-length:42\n\nThe message:\n\n'hello mum!\0' was malformed\0";
 	public static final String SEND_FRAME_WITH_HEADERS_AND_BODY = "SEND\ndestination:/queue/foo\n\nhello mum\0";
 
-	private final FrameStringParser underTest = new FrameStringParser(clientAndServerCommandFactory());
+	private final StringFrameParser underTest = new StringFrameParser(clientAndServerCommandFactory());
 
 	@Test
 	public void parseFrameWithHeadersAndBody() {

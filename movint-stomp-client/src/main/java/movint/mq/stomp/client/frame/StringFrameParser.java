@@ -10,13 +10,14 @@ import java.util.*;
  * Date: 02/06/13
  * Time: 01:19
  */
-public class FrameStringParser {
+public class StringFrameParser implements FrameParser<String> {
 	private final CommandFactory commandFactory;
 
-	public FrameStringParser(CommandFactory commandFactory) {
+	public StringFrameParser(CommandFactory commandFactory) {
 		this.commandFactory = commandFactory;
 	}
 
+	@Override
 	public Frame parse(String frameText) {
 		if (StringUtils.isBlank(frameText)) {
 			throw new IllegalArgumentException("Cannot parse blank frame");

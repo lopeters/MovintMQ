@@ -3,13 +3,10 @@ package movint.mq.stomp.client.connection;
 import movint.mq.stomp.client.frame.CommandFactory;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameSerializer;
-import movint.mq.stomp.client.frame.FrameStreamParser;
+import movint.mq.stomp.client.frame.StreamingFrameParser;
 
 import javax.net.SocketFactory;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 /**
@@ -20,7 +17,7 @@ import java.net.Socket;
  */
 public class SocketConnection implements Connection, Closeable {
 	private final FrameSerializer frameSerializer = new FrameSerializer();
-	private final FrameStreamParser frameParser = new FrameStreamParser(new CommandFactory.ServerCommandFactory());
+	private final StreamingFrameParser frameParser = new StreamingFrameParser(new CommandFactory.ServerCommandFactory());
 	private final Socket socket;
 
 	public SocketConnection(String host, int port) throws IOException {
@@ -36,12 +33,12 @@ public class SocketConnection implements Connection, Closeable {
 		Frame response = null;
 		try (
 				PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-				InputStream in = socket.getInputStream()) {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 			writer.print(frameSerializer.convertToWireFormat(frame));
 			writer.flush();
 			socket.shutdownOutput();
 			if (!socket.isClosed()) {
-				response = frameParser.parse(in);
+				response = frameParser.parse(reader);
 			}
 		}
 		return response;
