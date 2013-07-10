@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Created with IntelliJ IDEA.
@@ -84,14 +85,14 @@ public class FrameStreamParserTest {
 		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo\\bar"), "hello mum"), actualFrame);
 	}
 
+	@Test
+	public void parsingEmptyStreamReturnsNull() throws IOException {
+		assertNull(underTest.parse(new ByteArrayInputStream(new byte[0])));
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void cannotParseNullStream() throws IOException {
 		underTest.parse(null);
-	}
-
-	@Test(expected = FrameFormatException.class)
-	public void cannotParseEmptyFrame() throws IOException {
-		underTest.parse(new ByteArrayInputStream(new byte[0]));
 	}
 
 	@Test(expected = FrameFormatException.class)

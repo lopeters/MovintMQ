@@ -37,15 +37,15 @@ public class FrameStreamParser {
 					command = commandFactory.createCommand(currentInput);
 				} else {
 					String[] keyValuePair = currentInput.split(":");
-					if (keyValuePair.length != 2) {
+					if (keyValuePair.length != 2)
 						throw new FrameFormatException("Invalid header: '" + StringUtils.join(keyValuePair, ":") + "'");
-					}
 					headers.put(unescape(keyValuePair[0]), unescape(keyValuePair[1]));
 				}
 			}
-			if (currentInput == null) {
+			if (command == null)
+				return null;
+			else if (currentInput == null)
 				throw new FrameFormatException("Stream terminated before end of frame");
-			}
 			String contentLengthHeader = headers.get("content-length");
 			return new Frame(command, headers, readBody(in, contentLengthHeader));
 		}

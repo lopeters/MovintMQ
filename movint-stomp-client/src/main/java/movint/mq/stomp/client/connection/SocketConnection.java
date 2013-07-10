@@ -3,11 +3,13 @@ package movint.mq.stomp.client.connection;
 import movint.mq.stomp.client.frame.CommandFactory;
 import movint.mq.stomp.client.frame.Frame;
 import movint.mq.stomp.client.frame.FrameSerializer;
-import movint.mq.stomp.client.frame.FrameStringParser;
-import org.apache.commons.lang3.StringUtils;
+import movint.mq.stomp.client.frame.FrameStreamParser;
 
 import javax.net.SocketFactory;
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
@@ -18,7 +20,7 @@ import java.net.Socket;
  */
 public class SocketConnection implements Connection, Closeable {
 	private final FrameSerializer frameSerializer = new FrameSerializer();
-	private final FrameStringParser frameStringParser = new FrameStringParser(new CommandFactory.ServerCommandFactory());
+	private final FrameStreamParser frameParser = new FrameStreamParser(new CommandFactory.ServerCommandFactory());
 	private final Socket socket;
 
 	public SocketConnection(String host, int port) throws IOException {
@@ -31,30 +33,18 @@ public class SocketConnection implements Connection, Closeable {
 
 	@Override
 	public synchronized Frame send(Frame frame) throws IOException {
-		String response;
+		Frame response = null;
 		try (
 				PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+				InputStream in = socket.getInputStream()) {
 			writer.print(frameSerializer.convertToWireFormat(frame));
 			writer.flush();
 			socket.shutdownOutput();
-			response = readResponse(in);
-		}
-		return StringUtils.isNotBlank(response) ? frameStringParser.parse(response) : null;
-	}
-
-	private String readResponse(BufferedReader in) throws IOException {
-		StringBuilder response = new StringBuilder();
-		if (!socket.isClosed()) {
-			String inputLine;
-			boolean firstLine = true;
-			while ((inputLine = in.readLine()) != null) {
-				if (firstLine) firstLine = false;
-				else response.append("\n");
-				response.append(inputLine);
+			if (!socket.isClosed()) {
+				response = frameParser.parse(in);
 			}
 		}
-		return response.toString();
+		return response;
 	}
 
 	@Override
