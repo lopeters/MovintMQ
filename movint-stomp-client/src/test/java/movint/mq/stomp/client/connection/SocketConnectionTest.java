@@ -22,7 +22,8 @@ import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static movint.mq.stomp.client.frame.ClientCommand.STOMP;
 import static movint.mq.stomp.client.frame.ServerCommand.RECEIPT;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 /**
@@ -60,8 +61,15 @@ public class SocketConnectionTest {
 	}
 
 	@Test
-	public void frameIsEncodedAsUtf8() {
-		fail("Implement me");
+	public void frameIsEncodedAsUtf8() throws Exception {
+		Frame outgoingMessage = new Frame(STOMP, null, "γεια σου μαμα");
+		Future<Frame> messageFuture = startServerWithNoResponse();
+
+		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
+			Frame response = underTest.send(outgoingMessage);
+			assertEquals(outgoingMessage, messageFuture.get(1000, MILLISECONDS));
+			assertNull(response);
+		}
 	}
 
 	@Test
@@ -87,7 +95,7 @@ public class SocketConnectionTest {
 					public Frame call() {
 						try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
 							try (Socket clientSocket = serverSocket.accept()) {
-								try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+								try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
 								     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
 									Frame received = new StreamingFrameParser(new CommandFactory.ClientCommandFactory()).parse(reader);
 									if (response != null) {

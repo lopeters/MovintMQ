@@ -24,6 +24,7 @@ public class StreamingFrameParserTest {
 	public static final String ERROR_FRAME_NO_HEADERS_AND_EOLS_AFTER_NULL = ERROR_FRAME_NO_HEADERS + "\n\n\n\n\n\n\n";
 	public static final String ERROR_FRAME_WITH_NULL_IN_BODY = "ERROR\ncontent-length:41\n\nThe message:\n\n'hello mum!\0' was malformed\0";
 	public static final String SEND_FRAME_WITH_HEADERS_AND_BODY = "SEND\ndestination:/queue/foo\n\nhello mum\0";
+	public static final String SEND_FRAME_WITH_UTF8_CHARACTERS = "SEND\ndestination:/queue/foo\n\nγεια σου μαμα\0";
 
 	private final StreamingFrameParser underTest = new StreamingFrameParser(clientAndServerCommandFactory());
 
@@ -31,6 +32,12 @@ public class StreamingFrameParserTest {
 	public void parseFrameWithHeadersAndBody() throws IOException {
 		Frame actualFrame = underTest.parse(readerFor(SEND_FRAME_WITH_HEADERS_AND_BODY));
 		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), "hello mum"), actualFrame);
+	}
+
+	@Test
+	public void parseFrameWithUTF8Characters() throws IOException {
+		Frame actualFrame = underTest.parse(readerFor(SEND_FRAME_WITH_UTF8_CHARACTERS));
+		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), "γεια σου μαμα"), actualFrame);
 	}
 
 	@Test

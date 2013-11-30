@@ -32,9 +32,9 @@ public class SocketConnection implements Connection, Closeable {
 	public synchronized Frame send(Frame frame) throws IOException {
 		Frame response = null;
 		try (
-				PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+				OutputStreamWriter writer = new OutputStreamWriter(socket.getOutputStream(), "UTF-8");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-			writer.print(frameSerializer.convertToWireFormat(frame));
+			writer.write(frameSerializer.convertToWireFormat(frame));
 			writer.flush();
 			socket.shutdownOutput();
 			if (!socket.isClosed()) {
