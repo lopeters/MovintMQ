@@ -1,10 +1,8 @@
 package movint.mq.stomp.client;
 
 import movint.mq.stomp.client.connection.Connection;
-import movint.mq.stomp.client.connection.ConnectionFactory;
 import movint.mq.stomp.client.frame.ClientCommand;
 import movint.mq.stomp.client.frame.Frame;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -12,7 +10,8 @@ import java.util.LinkedHashMap;
 
 import static java.util.Collections.singletonMap;
 import static movint.mq.stomp.client.Destination.queue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,36 +20,17 @@ import static org.mockito.Mockito.*;
  * Time: 22:41
  */
 public class StompProducerTest {
-	private static final String HOST = "localhost";
 	private static final String MESSAGE_BODY = "Hello mum";
 	private static final String QUEUE_NAME = "foo";
 
 	private final Message message = new Message(singletonMap("name", "value"), MESSAGE_BODY);
-	private final ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
 	private final Connection connection = mock(Connection.class);
-	private final StompProducer underTest = new StompProducer(connectionFactory);
-
-	@Before
-	public void setUp() {
-		when(connectionFactory.newConnection()).thenReturn(connection);
-		when(connectionFactory.getHost()).thenReturn(HOST);
-	}
+	private final StompProducer underTest = new StompProducer(connection);
 
 	@Test
 	public void sendsMessage() throws IOException {
 		underTest.sendTo(queue(QUEUE_NAME), message);
-
-		verify(connection).send(expectedConnectFrame());
 		verify(connection).send(expectedSendFrame());
-		verify(connection).send(expectedDisconnectFrame());
-		verify(connection).close();
-	}
-
-	private Frame expectedConnectFrame() {
-		return new Frame(ClientCommand.CONNECT, new LinkedHashMap<String, String>() {{
-			put("accept-version", "1.0,1.1,1.2");
-			put("host", "localhost");
-		}}, null);
 	}
 
 	private Frame expectedSendFrame() {
@@ -58,11 +38,5 @@ public class StompProducerTest {
 			put("destination", "/queue/" + QUEUE_NAME);
 			put("name", "value");
 		}}, MESSAGE_BODY);
-	}
-
-	private Frame expectedDisconnectFrame() {
-		return new Frame(ClientCommand.DISCONNECT, new LinkedHashMap<String, String>() {{
-			put("receipt", "1");
-		}}, null);
 	}
 }
