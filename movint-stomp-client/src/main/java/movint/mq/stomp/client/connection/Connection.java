@@ -1,6 +1,7 @@
 package movint.mq.stomp.client.connection;
 
 import movint.mq.stomp.client.frame.Frame;
+import movint.mq.stomp.client.frame.ReceivedFrameHandler;
 
 import java.io.IOException;
 
@@ -11,7 +12,9 @@ import java.io.IOException;
  * Time: 23:34
  */
 public interface Connection {
-	Frame send(Frame frame) throws IOException;
+	void send(Frame frame) throws IOException;
 
 	void close() throws IOException;
+
+	void addReceivedFrameHandler(ReceivedFrameHandler receivedFrameHandler);
 }

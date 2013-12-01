@@ -1,5 +1,6 @@
 package movint.mq.stomp.client.frame;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -32,6 +33,13 @@ public class StreamingFrameParserTest {
 	public void parseFrameWithHeadersAndBody() throws IOException {
 		Frame actualFrame = underTest.parse(readerFor(SEND_FRAME_WITH_HEADERS_AND_BODY));
 		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), "hello mum"), actualFrame);
+	}
+
+	@Test
+	public void parseFrameWithLargeBody() throws IOException {
+		String largeBody = StringUtils.repeat("hello mum", 1000);
+		Frame actualFrame = underTest.parse(readerFor(String.format("SEND\ndestination:/queue/foo\n\n%s\0", largeBody)));
+		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), largeBody), actualFrame);
 	}
 
 	@Test

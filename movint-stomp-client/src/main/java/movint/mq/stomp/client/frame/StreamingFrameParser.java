@@ -14,6 +14,8 @@ import java.util.Map;
  * Time: 01:19
  */
 public class StreamingFrameParser implements FrameParser<BufferedReader> {
+	private static final int BUFFER_SIZE = 1500;
+
 	private final CommandFactory commandFactory;
 
 	public StreamingFrameParser(CommandFactory commandFactory) {
@@ -56,15 +58,13 @@ public class StreamingFrameParser implements FrameParser<BufferedReader> {
 	}
 
 	private String readUpToNullCharacter(BufferedReader reader) throws IOException {
-		String currentInput;
 		StringBuilder body = new StringBuilder();
-		boolean firstLine = true;
 		int nullIndex = -1;
-		while (nullIndex < 0 && (currentInput = reader.readLine()) != null) {
-			if (firstLine) firstLine = false;
-			else body.append("\n");
-			nullIndex = currentInput.indexOf("\0");
-			body.append(nullIndex >= 0 ? currentInput.substring(0, nullIndex) : currentInput);
+		char[] inputBuffer = new char[BUFFER_SIZE];
+		while (nullIndex < 0 && reader.read(inputBuffer, 0, BUFFER_SIZE) >= 0) {
+			String input = new String(inputBuffer);
+			nullIndex = input.indexOf("\0");
+			body.append(nullIndex == -1 ? input : input.substring(0, nullIndex));
 		}
 		if (nullIndex == -1) {
 			throw new FrameFormatException("Frame was not terminated by null character: " + body.toString());

@@ -1,29 +1,26 @@
 package movint.mq.stomp.client.connection;
 
-import movint.mq.stomp.client.frame.CommandFactory;
-import movint.mq.stomp.client.frame.Frame;
-import movint.mq.stomp.client.frame.FrameSerializer;
-import movint.mq.stomp.client.frame.StreamingFrameParser;
+import movint.mq.stomp.client.frame.*;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import javax.net.SocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Collections.singletonMap;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static movint.mq.stomp.client.frame.ClientCommand.DISCONNECT;
 import static movint.mq.stomp.client.frame.ClientCommand.STOMP;
 import static movint.mq.stomp.client.frame.ServerCommand.RECEIPT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -35,15 +32,37 @@ import static org.mockito.Mockito.*;
 public class SocketConnectionTest {
 	private static final int SERVER_PORT = 2121;
 
+	private volatile List<Frame> requests = new ArrayList<>();
+	private TestServer testServer;
+
+	@Before
+	public void startServer() throws IOException {
+		testServer = new TestServer();
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				testServer.listen();
+			}
+		}).start();
+	}
+
+	@After
+	public void stopServer() throws IOException {
+		testServer.stop();
+	}
+
 	@Test
 	public void sendAFrameWithNoResponse() throws Exception {
 		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
-		Future<Frame> messageFuture = startServerWithNoResponse();
 
-		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
-			Frame response = underTest.send(outgoingMessage);
-			assertEquals(outgoingMessage, messageFuture.get(1000, MILLISECONDS));
-			assertNull(response);
+		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT, 1000)) {
+			ReceivedFrameHandler receivedFrameHandler = mock(ReceivedFrameHandler.class);
+			underTest.addReceivedFrameHandler(receivedFrameHandler);
+			underTest.send(outgoingMessage);
+			Thread.sleep(200);
+			assertThat(requests, hasItem(outgoingMessage));
+			verifyZeroInteractions(receivedFrameHandler);
+			assertFalse(testServer.clientConnectionClosed());
 		}
 	}
 
@@ -51,64 +70,96 @@ public class SocketConnectionTest {
 	public void sendAFrameWithResponse() throws Exception {
 		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
 		Frame expectedResponse = new Frame(RECEIPT, singletonMap("header", "value"), "Hello son");
-		Future<Frame> messageFuture = startServerThatWillRespondWith(expectedResponse);
+		testServer.setResponse(expectedResponse);
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
-			Frame actualResponse = underTest.send(outgoingMessage);
-			assertEquals(outgoingMessage, messageFuture.get(1000, MILLISECONDS));
-			assertEquals(expectedResponse, actualResponse);
+			ReceivedFrameHandler receivedFrameHandler = mock(ReceivedFrameHandler.class);
+			underTest.addReceivedFrameHandler(receivedFrameHandler);
+			underTest.send(outgoingMessage);
+			Thread.sleep(200);
+			assertThat(requests, hasItem(outgoingMessage));
+			verify(receivedFrameHandler).frameReceived(expectedResponse);
+		}
+	}
+
+	@Test
+	public void closingTheConnectionClosesTheSocket2() throws Exception {
+		Frame outgoingMessage = new Frame(STOMP, null, "Hello Mum!");
+
+		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT, 1000)) {
+			underTest.send(outgoingMessage);
+			underTest.close();
+			Thread.sleep(200);
+			assertTrue(testServer.clientConnectionClosed());
+			assertThat(requests, hasItem(outgoingMessage));
+		}
+	}
+
+	@Test
+	public void canSendMultipleFramesOnOneConnection() throws Exception {
+		Frame firstOutgoingMessage = new Frame(STOMP, null, "Hello Mum!");
+		Frame secondOutgoingMessage = new Frame(DISCONNECT, null, "");
+
+		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
+			underTest.send(firstOutgoingMessage);
+			Thread.sleep(200);
+			assertThat(requests, hasItem(firstOutgoingMessage));
+			underTest.send(secondOutgoingMessage);
+			Thread.sleep(200);
+			assertThat(requests, hasItem(secondOutgoingMessage));
 		}
 	}
 
 	@Test
 	public void frameIsEncodedAsUtf8() throws Exception {
 		Frame outgoingMessage = new Frame(STOMP, null, "γεια σου μαμα");
-		Future<Frame> messageFuture = startServerWithNoResponse();
 
 		try (SocketConnection underTest = new SocketConnection("localhost", SERVER_PORT)) {
-			Frame response = underTest.send(outgoingMessage);
-			assertEquals(outgoingMessage, messageFuture.get(1000, MILLISECONDS));
-			assertNull(response);
+			underTest.send(outgoingMessage);
+			Thread.sleep(200);
+			assertThat(requests, hasItem(outgoingMessage));
 		}
 	}
 
-	@Test
-	public void closeTheConnection() throws IOException {
-		SocketFactory socketFactory = mock(SocketFactory.class);
-		Socket socket = mock(Socket.class);
-		when(socketFactory.createSocket("localhost", SERVER_PORT)).thenReturn(socket);
-		when(socket.isConnected()).thenReturn(true);
+	class TestServer {
+		private final ServerSocket serverSocket;
+		private final StreamingFrameParser frameParser = new StreamingFrameParser(new CommandFactory.ClientCommandFactory());
+		private Frame response;
+		private boolean socketClosed = false;
 
-		new SocketConnection("localhost", SERVER_PORT, socketFactory).close();
-		verify(socket).close();
-	}
+		public TestServer() throws IOException {
+			serverSocket = new ServerSocket(SERVER_PORT);
+		}
 
-	public Future<Frame> startServerWithNoResponse() throws IOException {
-		return startServerThatWillRespondWith(null);
-	}
+		public void setResponse(Frame response) {
+			this.response = response;
+		}
 
-	public Future<Frame> startServerThatWillRespondWith(final Frame response) throws IOException {
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		return executor.submit(
-				new Callable<Frame>() {
-					@Override
-					public Frame call() {
-						try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
-							try (Socket clientSocket = serverSocket.accept()) {
-								try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
-								     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
-									Frame received = new StreamingFrameParser(new CommandFactory.ClientCommandFactory()).parse(reader);
-									if (response != null) {
-										writer.print(new FrameSerializer().convertToWireFormat(response));
-										writer.flush();
-									}
-									return received;
-								}
-							}
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						}
+		public void listen() {
+			try (Socket clientSocket = serverSocket.accept()) {
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
+				     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
+					Frame received;
+					while ((received = frameParser.parse(reader)) != null) {
+						System.out.println("Server received: " + received);
+						requests.add(received);
+						writer.print(response != null ? new FrameSerializer().convertToWireFormat(response) : System.lineSeparator());
+						writer.flush();
 					}
-				});
+				}
+			} catch (SocketException e) {
+				socketClosed = true;
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		public void stop() throws IOException {
+			serverSocket.close();
+		}
+
+		public boolean clientConnectionClosed() {
+			return socketClosed;
+		}
 	}
 }
