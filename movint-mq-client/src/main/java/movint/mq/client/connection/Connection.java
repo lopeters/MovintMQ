@@ -1,7 +1,7 @@
 package movint.mq.client.connection;
 
-import movint.mq.api.frame.Frame;
-import movint.mq.api.frame.ReceivedFrameHandler;
+import movint.mq.api.stomp.frame.Frame;
+import movint.mq.api.stomp.frame.ReceivedFrameHandler;
 
 import java.io.IOException;
 

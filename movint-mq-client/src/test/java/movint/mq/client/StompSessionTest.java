@@ -1,7 +1,7 @@
 package movint.mq.client;
 
-import movint.mq.api.frame.ClientCommand;
-import movint.mq.api.frame.Frame;
+import movint.mq.api.stomp.frame.ClientCommand;
+import movint.mq.api.stomp.frame.Frame;
 import movint.mq.client.connection.Connection;
 import movint.mq.client.connection.ConnectionFactory;
 import org.junit.Before;

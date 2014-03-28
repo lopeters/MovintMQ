@@ -1,6 +1,6 @@
 package movint.mq.client.connection;
 
-import movint.mq.api.frame.*;
+import movint.mq.api.stomp.frame.*;
 
 import javax.net.SocketFactory;
 import java.io.*;

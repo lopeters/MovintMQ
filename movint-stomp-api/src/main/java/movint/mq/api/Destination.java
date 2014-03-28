@@ -1,10 +1,11 @@
 package movint.mq.api;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,7 +23,7 @@ public class Destination {
 
 	Destination(DestinationType type, String name) {
 		this.type = type;
-		if (StringUtils.isBlank(name)) {
+		if (isBlank(name)) {
 			throw new IllegalArgumentException("Destination name cannot be blank");
 		}
 		this.name = name;

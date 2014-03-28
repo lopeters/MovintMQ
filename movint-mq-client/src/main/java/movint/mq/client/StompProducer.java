@@ -2,7 +2,7 @@ package movint.mq.client;
 
 import movint.mq.api.Destination;
 import movint.mq.api.Message;
-import movint.mq.api.frame.builders.SendFrameBuilder;
+import movint.mq.api.stomp.frame.builders.SendFrameBuilder;
 import movint.mq.client.connection.Connection;
 
 import java.io.IOException;

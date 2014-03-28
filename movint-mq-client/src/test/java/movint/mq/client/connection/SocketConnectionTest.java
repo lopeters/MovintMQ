@@ -1,6 +1,6 @@
 package movint.mq.client.connection;
 
-import movint.mq.api.frame.*;
+import movint.mq.api.stomp.frame.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.singletonMap;
-import static movint.mq.api.frame.ClientCommand.DISCONNECT;
-import static movint.mq.api.frame.ClientCommand.STOMP;
-import static movint.mq.api.frame.ServerCommand.RECEIPT;
+import static movint.mq.api.stomp.frame.ClientCommand.DISCONNECT;
+import static movint.mq.api.stomp.frame.ClientCommand.STOMP;
+import static movint.mq.api.stomp.frame.ServerCommand.RECEIPT;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
