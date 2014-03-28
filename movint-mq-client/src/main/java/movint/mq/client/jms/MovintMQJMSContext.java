@@ -1,4 +1,4 @@
-package movint.mq.client;
+package movint.mq.client.jms;
 
 import javax.jms.*;
 import java.io.Serializable;
