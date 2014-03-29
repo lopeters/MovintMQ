@@ -11,7 +11,7 @@
     <dependencies>
         <dependency>
             <groupId>movint.mq</groupId>
-            <artifactId>movint-mq-stomp-api</artifactId>
+            <artifactId>movint-mq-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
