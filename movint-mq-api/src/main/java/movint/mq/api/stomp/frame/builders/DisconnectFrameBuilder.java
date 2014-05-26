@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
  * Date: 29/05/13
  * Time: 22:51
  */
-public class DisconnectFrameBuilder {
+public class DisconnectFrameBuilder implements FrameBuilder {
 	private static final String RECEIPT_HEADER = "receipt";
 
 	private String receiptId;

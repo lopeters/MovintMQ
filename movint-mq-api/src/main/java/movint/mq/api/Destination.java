@@ -37,6 +37,11 @@ public class Destination {
 		return new Destination(DestinationType.queue, name);
 	}
 
+	public static Destination parse(String destinationString) {
+		String[] split = destinationString.split("/", 3);
+		return new Destination(DestinationType.valueOf(split[1]), split[2]);
+	}
+
 	public String value() {
 		return "/" + type.name() + "/" + name;
 	}

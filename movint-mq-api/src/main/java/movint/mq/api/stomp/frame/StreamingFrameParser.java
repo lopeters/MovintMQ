@@ -16,10 +16,10 @@ import java.util.Map;
 public class StreamingFrameParser implements FrameParser<BufferedReader> {
 	private static final int BUFFER_SIZE = 1500;
 
-	private final CommandFactory commandFactory;
+	private final StompCommandFactory stompCommandFactory;
 
-	public StreamingFrameParser(CommandFactory commandFactory) {
-		this.commandFactory = commandFactory;
+	public StreamingFrameParser(StompCommandFactory stompCommandFactory) {
+		this.stompCommandFactory = stompCommandFactory;
 	}
 
 	@Override
@@ -27,19 +27,21 @@ public class StreamingFrameParser implements FrameParser<BufferedReader> {
 		if (reader == null)
 			throw new IllegalArgumentException("Cannot parse null input stream");
 		Map<String, String> headers = new LinkedHashMap<>();
-		Command command = null;
+		StompCommand command = null;
 		String currentInput;
 		boolean readingCommandLine = true;
-		while ((currentInput = reader.readLine()) != null && currentInput.length() > 0) {
-			if (readingCommandLine) {
-				readingCommandLine = false;
-				command = commandFactory.createCommand(currentInput);
-			} else {
-				String[] keyValuePair = currentInput.split(":");
-				if (keyValuePair.length != 2)
-					throw new FrameFormatException("Invalid header: '" + StringUtils.join(keyValuePair, ":") + "'");
-				headers.put(unescape(keyValuePair[0]), unescape(keyValuePair[1]));
-			}
+		while ((currentInput = reader.readLine()) != null) {
+			if (currentInput.length() > 0) {
+				if (readingCommandLine) {
+					readingCommandLine = false;
+					command = stompCommandFactory.createCommand(currentInput);
+				} else {
+					String[] keyValuePair = currentInput.split(":");
+					if (keyValuePair.length != 2)
+						throw new FrameFormatException("Invalid header: '" + StringUtils.join(keyValuePair, ":") + "'");
+					headers.put(unescape(keyValuePair[0]), unescape(keyValuePair[1]));
+				}
+			} else if (!readingCommandLine) break;
 		}
 		if (command == null)
 			return null;

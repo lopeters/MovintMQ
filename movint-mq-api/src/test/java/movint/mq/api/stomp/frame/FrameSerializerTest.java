@@ -26,8 +26,8 @@ public class FrameSerializerTest {
 
 	@Test
 	public void serialisesFrameWithNoBody() {
-		Frame frame = new Frame(ClientCommand.STOMP, Collections.singletonMap("key1", "value1"), "Hello mum!");
-		assertEquals("STOMP\nkey1:value1\n\nHello mum!\0", new FrameSerializer().convertToWireFormat(frame));
+		Frame frame = new Frame(ClientCommand.STOMP, Collections.singletonMap("key1", "value1"), null);
+		assertEquals("STOMP\nkey1:value1\n\n\0", new FrameSerializer().convertToWireFormat(frame));
 	}
 
 	@Test

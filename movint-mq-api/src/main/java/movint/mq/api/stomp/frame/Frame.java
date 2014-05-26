@@ -14,20 +14,24 @@ import java.util.Map;
  * Time: 22:31
  */
 public class Frame {
-	private final Command command;
+	private final StompCommand command;
 	private final Map<String, String> headers;
 	private final String body;
 
-	public Frame(Command command, Map<String, String> headers, String body) {
+	public Frame(StompCommand command, Map<String, String> headers) {
+		this(command, headers, "");
+	}
+
+	public Frame(StompCommand command, Map<String, String> headers, String body) {
 		if (command == null) {
-			throw new IllegalArgumentException("Command must not be null");
+			throw new IllegalArgumentException("StompCommand must not be null");
 		}
 		this.command = command;
 		this.headers = headers != null ? headers : Collections.<String, String>emptyMap();
-		this.body = body;
+		this.body = body != null ? body : "";
 	}
 
-	public Command getCommand() {
+	public StompCommand getCommand() {
 		return command;
 	}
 
@@ -37,6 +41,10 @@ public class Frame {
 
 	public String getBody() {
 		return body;
+	}
+
+	public String serialize() {
+		return new FrameSerializer().convertToWireFormat(this);
 	}
 
 	public int hashCode() {

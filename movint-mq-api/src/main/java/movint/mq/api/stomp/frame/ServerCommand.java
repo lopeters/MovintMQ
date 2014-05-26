@@ -6,6 +6,6 @@ package movint.mq.api.stomp.frame;
  * Date: 29/05/13
  * Time: 23:01
  */
-public enum ServerCommand implements Command {
+public enum ServerCommand implements StompCommand {
 	MESSAGE, ERROR, RECEIPT
 }

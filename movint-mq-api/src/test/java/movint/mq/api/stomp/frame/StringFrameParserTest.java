@@ -103,10 +103,10 @@ public class StringFrameParserTest {
 		underTest.parse("STOMP\n\n");
 	}
 
-	private CommandFactory clientAndServerCommandFactory() {
-		return new CommandFactory() {
+	private StompCommandFactory clientAndServerCommandFactory() {
+		return new StompCommandFactory() {
 			@Override
-			public Command createCommand(String commandName) {
+			public StompCommand createCommand(String commandName) {
 				try {
 					return ClientCommand.valueOf(commandName);
 				} catch (Exception e) {

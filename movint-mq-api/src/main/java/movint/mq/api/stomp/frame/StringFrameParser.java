@@ -11,10 +11,10 @@ import java.util.*;
  * Time: 01:19
  */
 public class StringFrameParser implements FrameParser<String> {
-	private final CommandFactory commandFactory;
+	private final StompCommandFactory stompCommandFactory;
 
-	public StringFrameParser(CommandFactory commandFactory) {
-		this.commandFactory = commandFactory;
+	public StringFrameParser(StompCommandFactory stompCommandFactory) {
+		this.stompCommandFactory = stompCommandFactory;
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class StringFrameParser implements FrameParser<String> {
 		String[] commandAndHeaders = frameSections[0].split("\n");
 		Map<String, String> headers = parseHeaders(commandAndHeaders);
 		int bodyLength = headers.containsKey("content-length") ? Integer.valueOf(headers.get("content-length")) - 1 : frameSections[1].lastIndexOf("\0");
-		return new Frame(commandFactory.createCommand(commandAndHeaders[0]), headers, frameSections[1].substring(0, bodyLength));
+		return new Frame(stompCommandFactory.createCommand(commandAndHeaders[0]), headers, frameSections[1].substring(0, bodyLength));
 	}
 
 	private Map<String, String> parseHeaders(String[] commandAndHeaders) {

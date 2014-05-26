@@ -3,9 +3,7 @@ package movint.mq.api.stomp.frame;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 
@@ -33,6 +31,32 @@ public class StreamingFrameParserTest {
 	public void parseFrameWithHeadersAndBody() throws IOException {
 		Frame actualFrame = underTest.parse(readerFor(SEND_FRAME_WITH_HEADERS_AND_BODY));
 		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), "hello mum"), actualFrame);
+	}
+
+	@Test
+	public void canParseMultipleFramesFromTheSameReader() throws IOException {
+		PipedInputStream in = new PipedInputStream();
+		PipedOutputStream out = new PipedOutputStream(in);
+		new Thread(() -> {
+			try {
+				out.write(STOMP_FRAME_NO_BODY.getBytes());
+				out.flush();
+				Thread.sleep(2000);
+				out.write(SEND_FRAME_WITH_HEADERS_AND_BODY.getBytes());
+				out.flush();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}).start();
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		Frame firstFrame = underTest.parse(reader);
+		assertEquals(new Frame(ClientCommand.STOMP, new LinkedHashMap<String, String>() {{
+			put("accept-version", "1.2");
+			put("host", "localhost");
+		}}, ""), firstFrame);
+		Frame secondFrame = underTest.parse(reader);
+		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), "hello mum"), secondFrame);
 	}
 
 	@Test
@@ -106,6 +130,12 @@ public class StreamingFrameParserTest {
 		assertNull(underTest.parse(new BufferedReader(new StringReader(""))));
 	}
 
+	@Test
+	public void discardEmptyCommandLineAndReadNextFrame() throws IOException {
+		Frame actualFrame = underTest.parse(readerFor(System.lineSeparator() + SEND_FRAME_WITH_HEADERS_AND_BODY));
+		assertEquals(new Frame(ClientCommand.SEND, Collections.singletonMap("destination", "/queue/foo"), "hello mum"), actualFrame);
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void cannotParseFromNullReader() throws IOException {
 		underTest.parse(null);
@@ -150,10 +180,10 @@ public class StreamingFrameParserTest {
 		return new BufferedReader(new StringReader(input));
 	}
 
-	private CommandFactory clientAndServerCommandFactory() {
-		return new CommandFactory() {
+	private StompCommandFactory clientAndServerCommandFactory() {
+		return new StompCommandFactory() {
 			@Override
-			public Command createCommand(String commandName) {
+			public StompCommand createCommand(String commandName) {
 				try {
 					return ClientCommand.valueOf(commandName);
 				} catch (Exception e) {

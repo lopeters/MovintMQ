@@ -6,6 +6,6 @@ package movint.mq.api.stomp.frame;
  * Date: 29/05/13
  * Time: 23:01
  */
-public enum ClientCommand implements Command {
+public enum ClientCommand implements StompCommand {
 	CONNECT, STOMP, SEND, ACK, NACK, SUBSCRIBE, UNSUBSCRIBE, BEGIN, COMMIT, ABORT, DISCONNECT
 }

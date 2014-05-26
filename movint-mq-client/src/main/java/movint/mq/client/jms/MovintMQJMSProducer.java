@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class MovintMQJMSProducer implements JMSProducer {
+
 	@Override
 	public JMSProducer send(Destination destination, Message message) {
 		return null;
@@ -16,7 +17,7 @@ public class MovintMQJMSProducer implements JMSProducer {
 
 	@Override
 	public JMSProducer send(Destination destination, String body) {
-		return null;
+		return this;
 	}
 
 	@Override

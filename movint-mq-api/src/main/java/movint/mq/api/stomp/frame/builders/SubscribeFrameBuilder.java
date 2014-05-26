@@ -9,7 +9,7 @@ import movint.mq.api.stomp.frame.Frame;
  * Date: 29/05/13
  * Time: 22:51
  */
-public class SubscribeFrameBuilder {
+public class SubscribeFrameBuilder implements FrameBuilder {
 	public Frame build() {
 		return new Frame(ClientCommand.SUBSCRIBE, null, null);
 	}

@@ -10,11 +10,10 @@ import movint.mq.api.stomp.frame.header.MessageId;
  * Date: 29/05/13
  * Time: 22:51
  */
-public class NotAcknowledgedFrameBuilder {
+public class NotAcknowledgedFrameBuilder implements FrameBuilder {
 	private final MessageId messageId;
 
 	public NotAcknowledgedFrameBuilder(MessageId messageId) {
-
 		this.messageId = messageId;
 	}
 

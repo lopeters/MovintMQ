@@ -6,6 +6,6 @@ package movint.mq.api.stomp.frame;
  * Date: 06/07/13
  * Time: 02:43
  */
-public interface Command {
+public interface StompCommand {
 	String name();
 }
