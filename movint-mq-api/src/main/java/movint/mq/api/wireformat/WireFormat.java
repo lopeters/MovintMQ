@@ -6,7 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public interface WireFormat {
-	String serialize(Command command);
+    String serialize(Command command);
 
-	Command deserialize(BufferedReader commandReader) throws IOException;
+    Command deserialize(BufferedReader commandReader) throws IOException, UnsupportedOperationException;
 }

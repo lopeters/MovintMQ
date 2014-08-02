@@ -4,6 +4,7 @@ import movint.mq.api.Destination;
 import movint.mq.api.commands.ConnectCommand;
 import movint.mq.api.commands.DisconnectCommand;
 import movint.mq.api.commands.MessageCommand;
+import movint.mq.api.commands.ReceiptCommand;
 import movint.mq.api.stomp.StompWireFormat;
 import movint.mq.api.stomp.frame.*;
 import movint.mq.api.stomp.frame.builders.ConnectFrameBuilder;
@@ -46,13 +47,8 @@ public class TcpTransportTest {
 	@Before
 	public void startServer() throws IOException {
 		testServer = new TestServer();
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				testServer.listen();
-			}
-		}).start();
-	}
+        new Thread(testServer::listen).start();
+    }
 
 	@After
 	public void stopServer() throws IOException {
@@ -69,17 +65,15 @@ public class TcpTransportTest {
 			underTest.send(connectCommand);
 			Thread.sleep(100);
 			assertThat(requests, hasItem(expectedConnectFrame()));
-			System.out.println("This should be first");
 			verifyZeroInteractions(commandListener);
 			assertFalse(testServer.clientConnectionClosed());
 		}
 	}
 
-	// TODO - fix me!
 	@Test
 	public void sendAFrameWithResponse() throws Exception {
 		ConnectCommand connectCommand = new ConnectCommand("localhost");
-		testServer.setResponse(new Frame(RECEIPT, singletonMap("header", "value"), "Hello son"));
+        testServer.setResponse(new Frame(RECEIPT, singletonMap("receipt-id", "12345")));
 
 		try (TcpTransport underTest = new TcpTransport("localhost", SERVER_PORT)) {
 			CommandListener commandListener = mock(CommandListener.class);
@@ -87,8 +81,8 @@ public class TcpTransportTest {
 			underTest.send(connectCommand);
 			Thread.sleep(200);
 			assertThat(requests, hasItem(expectedConnectFrame()));
-			verify(commandListener).onCommand(new MessageCommand(null, singletonMap("header", "value"), "Hello son"));
-		}
+            verify(commandListener).onCommand(new ReceiptCommand("12345"));
+        }
 	}
 
 	@Test
@@ -151,8 +145,8 @@ public class TcpTransportTest {
 		public void listen() {
 			try (Socket clientSocket = serverSocket.accept()) {
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
-				     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
-					Frame received;
+                     PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
+                    Frame received;
 					while ((received = frameParser.parse(reader)) != null) {
 						System.out.println("Server received: " + received);
 						requests.add(received);

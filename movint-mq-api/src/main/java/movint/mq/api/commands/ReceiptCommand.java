@@ -5,18 +5,16 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import java.util.Objects;
+public class ReceiptCommand implements Command {
+    private String id;
 
-public class ConnectCommand implements Command {
-    private final String host;
+    public ReceiptCommand(String id) {
+        this.id = id;
+    }
 
-	public ConnectCommand(String host) {
-		this.host = Objects.requireNonNull(host, "Host cannot be null");
-	}
-
-	public String getHost() {
-		return host;
-	}
+    public String getId() {
+        return id;
+    }
 
     @Override
     public boolean equals(Object o) {

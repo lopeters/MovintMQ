@@ -1,10 +1,7 @@
 package movint.mq.api.stomp;
 
 import movint.mq.api.Destination;
-import movint.mq.api.commands.Command;
-import movint.mq.api.commands.ConnectCommand;
-import movint.mq.api.commands.DisconnectCommand;
-import movint.mq.api.commands.MessageCommand;
+import movint.mq.api.commands.*;
 import movint.mq.api.stomp.frame.*;
 import movint.mq.api.stomp.frame.builders.ConnectFrameBuilder;
 import movint.mq.api.stomp.frame.builders.DisconnectFrameBuilder;
@@ -52,8 +49,8 @@ public class StompWireFormat implements WireFormat {
 
 	// TODO - push behaviour on to enum?
 	@Override
-	public Command deserialize(BufferedReader commandReader) throws IOException {
-		Frame frame = frameParser.parse(commandReader);
+    public Command deserialize(BufferedReader commandReader) throws IOException, UnsupportedOperationException {
+        Frame frame = frameParser.parse(commandReader);
 		if (frame.getCommand() == ClientCommand.CONNECT || frame.getCommand() == ClientCommand.STOMP) {
 			return new ConnectCommand(frame.getHeaders().get("host"));
 		}
@@ -63,6 +60,9 @@ public class StompWireFormat implements WireFormat {
 		if (frame.getCommand() == ClientCommand.DISCONNECT) {
 			return new DisconnectCommand();
 		}
-		throw new UnsupportedOperationException("Unknown command: " + frame.getCommand());
-	}
+        if (frame.getCommand() == ServerCommand.RECEIPT) {
+            return new ReceiptCommand(frame.getHeaders().get("receipt-id"));
+        }
+        throw new UnsupportedOperationException("Unsupported frame type: " + frame.getCommand());
+    }
 }
